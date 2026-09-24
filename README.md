@@ -173,4 +173,81 @@ ts:build:
 
 ---
 
-*နောက်ထပ် steps တွေ ဆက်ထည့်သွားမယ်...*
+---
+
+### ✅ Step 4 — Docker Image Build & Push Stage
+**Commit:** `ci: Step 4 - Docker image build & push stage`
+
+#### ဘာတွေ လုပ်ခဲ့သလဲ
+- `Dockerfile` (multi-stage) ကို ဆောက်ခဲ့တယ်
+- `docker:build` job ကို `dockerize` stage မှာ ထည့်ခဲ့တယ်
+- GitLab Container Registry (`$CI_REGISTRY`) ကို push လုပ်အောင် configure လုပ်ခဲ့တယ်
+- `rules: if: main` — main branch push တိုင်းသာ Docker build ဖြစ်မယ်
+- Image ကို commit SHA tag နဲ့ `latest` tag နှစ်ခုတပ်တယ်
+
+#### ဘာကြောင့် ဒီလိုလုပ်ရသလဲ
+
+| ရွေးချယ်မှု | အကြောင်းပြချက် |
+|-------------|----------------|
+| Multi-stage Dockerfile | builder stage မှာ devDependencies မပါပဲ production deps ပဲ ယူ → image size သေး |
+| `docker:24-dind` service | CI runner ထဲမှာ Docker engine run ဖို့ Docker-in-Docker လိုတယ် |
+| `$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA` | Commit SHA tag — ဘယ် commit မှ build လာတာ ဆိုတာ track လုပ်နိုင်တယ် |
+| `rules: if: main` | Feature branch တိုင်း Docker build မဖြစ်ဘဲ main push တိုင်းသာ → resource ချွေတာ |
+
+#### Dockerfile Structure
+
+```dockerfile
+# Stage 1: Builder
+FROM node:18-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY dist/ ./dist/
+
+# Stage 2: Runner (final image)
+FROM node:18-alpine AS runner
+WORKDIR /app
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY package*.json ./
+EXPOSE 3000
+CMD ["node", "dist/app.js"]
+```
+
+#### `.gitlab-ci.yml` (Step 4 ထည့်ပြီးနောက်)
+
+```yaml
+docker:build:
+  stage: dockerize
+  image: docker:24
+  services:
+    - docker:24-dind
+  variables:
+    IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+    LATEST_TAG: $CI_REGISTRY_IMAGE:latest
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build -t $IMAGE_TAG -t $LATEST_TAG .
+    - docker push $IMAGE_TAG
+    - docker push $LATEST_TAG
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+```
+
+---
+
+## 🎉 Pipeline ပြည့်စုံပြီ!
+
+```
+npm:install  →  eslint  →  unit:test  →  ts:build  →  docker:build
+  (install)     (lint)      (test)        (build)      (dockerize)
+```
+
+| Step | Job | Stage | Cache Policy |
+|------|-----|-------|-------------|
+| 1 | `npm:install` | install | push (upload) |
+| 2a | `eslint` | lint | pull (download) |
+| 2b | `unit:test` | test | pull (download) |
+| 3 | `ts:build` | build | pull (download) |
+| 4 | `docker:build` | dockerize | — (artifact) |
