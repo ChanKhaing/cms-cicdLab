@@ -79,4 +79,58 @@ npm:install:
 
 ---
 
+---
+
+### ✅ Step 2 — ESLint + Jest Test Stages
+**Commit:** `ci: Step 2 - ESLint lint stage & Jest test stage`
+
+#### ဘာတွေ လုပ်ခဲ့သလဲ
+- `eslint` job ကို `lint` stage မှာ ထည့်ခဲ့တယ်
+- `unit:test` job ကို `test` stage မှာ ထည့်ခဲ့တယ်
+- `when: manual` ကို ဖြုတ်ပြီး auto-run ဖြစ်အောင် ပြင်ခဲ့တယ်
+- Cache `policy: pull` သတ်မှတ်ခဲ့တယ် (Step 1 ကလုပ်ထားတဲ့ cache ကို download ပဲ လုပ်)
+- Coverage report ကို `artifacts` အဖြစ် 7 ရက် သိမ်းထားအောင် သတ်မှတ်ခဲ့တယ်
+
+#### ဘာကြောင့် ဒီလိုလုပ်ရသလဲ
+
+| ရွေးချယ်မှု | အကြောင်းပြချက် |
+|-------------|----------------|
+| `when: manual` ဖြုတ်တယ် | CI/CD ရဲ့ အဓိကရည်ရွယ်ချက်က auto-run — manual ဆိုရင် အဓိပ္ပာယ်မရှိ |
+| `policy: pull` | Step 1 က upload လုပ်ထားပြီ၊ ဒီ job တွေ download ပဲ လုပ်ရတယ် → မြန်တယ် |
+| `artifacts: when: always` | Test fail ဖြစ်လည်း coverage report ကြည့်နိုင်အောင် |
+| lint → test order | Lint မအောင်ရင် test မပြေး → fail fast principle |
+
+#### `.gitlab-ci.yml` (Step 2 ထည့်ပြီးနောက်)
+
+```yaml
+eslint:
+  stage: lint
+  cache:
+    key: "$CI_COMMIT_REF_SLUG"
+    paths:
+      - node_modules/
+    policy: pull
+  script:
+    - echo "🔍 Running ESLint..."
+    - npx eslint . --ext .ts
+
+unit:test:
+  stage: test
+  cache:
+    key: "$CI_COMMIT_REF_SLUG"
+    paths:
+      - node_modules/
+    policy: pull
+  script:
+    - echo "🧪 Running Jest unit tests..."
+    - npm test
+  artifacts:
+    when: always
+    paths:
+      - coverage/
+    expire_in: 7 days
+```
+
+---
+
 *နောက်ထပ် steps တွေ ဆက်ထည့်သွားမယ်...*
