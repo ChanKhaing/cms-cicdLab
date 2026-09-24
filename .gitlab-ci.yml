@@ -1,0 +1,24 @@
+image: node:18-alpine
+
+stages:
+  - install
+  - lint
+  - test
+  - build
+  - dockerize
+
+# ─────────────────────────────────────────────
+# STEP 1: npm install & cache node_modules
+# ─────────────────────────────────────────────
+npm:install:
+  stage: install
+  cache:
+    key: "$CI_COMMIT_REF_SLUG"   # branch name ကို key အဖြစ်သုံး
+    paths:
+      - node_modules/
+    policy: push                  # ဒီ job က cache ကို upload ပဲ လုပ်တယ်
+  script:
+    - echo "📦 Installing npm dependencies..."
+    - npm ci                      # package-lock.json ကို တိတိကျကျ follow လုပ်တယ်
+  artifacts:
+    expire_in: 1 day
