@@ -133,4 +133,44 @@ unit:test:
 
 ---
 
+---
+
+### ✅ Step 3 — TypeScript Build Stage
+**Commit:** `ci: Step 3 - TypeScript build stage`
+
+#### ဘာတွေ လုပ်ခဲ့သလဲ
+- `ts:build` job ကို `build` stage မှာ ထည့်ခဲ့တယ်
+- `npm run build:ts` (= `tsc`) ဖြင့် `src/*.ts` → `dist/*.js` compile လုပ်တယ်
+- `dist/` folder ကို artifact အဖြစ် 1 ရက် သိမ်းထားပြီး နောက် stage ကို pass လုပ်တယ်
+- Cache `policy: pull` သုံးတယ် (node_modules download ပဲ)
+
+#### ဘာကြောင့် ဒီလိုလုပ်ရသလဲ
+
+| ရွေးချယ်မှု | အကြောင်းပြချက် |
+|-------------|----------------|
+| `npm run build:ts` | `tsc` ကို run တာ — TypeScript → JavaScript compile လုပ်တယ် |
+| `artifacts: dist/` | Docker build stage က ဒီ `dist/` ကို လိုတယ် — pass မလုပ်ရင် Docker stage မှာ files မရှိဘူး |
+| `expire_in: 1 day` | Docker build ပြီးရင် မလိုတော့တဲ့ temporary artifact |
+
+#### `.gitlab-ci.yml` (Step 3 ထည့်ပြီးနောက်)
+
+```yaml
+ts:build:
+  stage: build
+  cache:
+    key: "$CI_COMMIT_REF_SLUG"
+    paths:
+      - node_modules/
+    policy: pull
+  script:
+    - echo "🔨 Compiling TypeScript..."
+    - npm run build:ts
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 1 day
+```
+
+---
+
 *နောက်ထပ် steps တွေ ဆက်ထည့်သွားမယ်...*
