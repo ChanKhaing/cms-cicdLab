@@ -22,3 +22,36 @@ npm:install:
     - npm ci                      # package-lock.json ကို တိတိကျကျ follow လုပ်တယ်
   artifacts:
     expire_in: 1 day
+
+# ─────────────────────────────────────────────
+# STEP 2: ESLint (lint stage)
+# ─────────────────────────────────────────────
+eslint:
+  stage: lint
+  cache:
+    key: "$CI_COMMIT_REF_SLUG"
+    paths:
+      - node_modules/
+    policy: pull                  # cache ကို download ပဲ လုပ်တယ် (upload မလုပ်)
+  script:
+    - echo "🔍 Running ESLint..."
+    - npx eslint . --ext .ts      # TypeScript files အားလုံး lint လုပ်
+
+# ─────────────────────────────────────────────
+# STEP 2: Jest Unit Tests (test stage)
+# ─────────────────────────────────────────────
+unit:test:
+  stage: test
+  cache:
+    key: "$CI_COMMIT_REF_SLUG"
+    paths:
+      - node_modules/
+    policy: pull                  # cache ကို download ပဲ လုပ်တယ်
+  script:
+    - echo "🧪 Running Jest unit tests..."
+    - npm test                    # jest --coverage (package.json မှာ သတ်မှတ်ထားတယ်)
+  artifacts:
+    when: always                  # test fail ဖြစ်လည်း coverage report သိမ်းတယ်
+    paths:
+      - coverage/
+    expire_in: 7 days
