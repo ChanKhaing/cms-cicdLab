@@ -55,3 +55,21 @@ unit:test:
     paths:
       - coverage/
     expire_in: 7 days
+
+# ─────────────────────────────────────────────
+# STEP 3: TypeScript Build (build stage)
+# ─────────────────────────────────────────────
+ts:build:
+  stage: build
+  cache:
+    key: "$CI_COMMIT_REF_SLUG"
+    paths:
+      - node_modules/
+    policy: pull                  # node_modules ကို download ပဲ လုပ်တယ်
+  script:
+    - echo "🔨 Compiling TypeScript..."
+    - npm run build:ts             # tsc → src/*.ts ကို dist/*.js အဖြစ် compile လုပ်တယ်
+  artifacts:
+    paths:
+      - dist/                      # compiled JS ကို next stage (docker) ကို pass လုပ်တယ်
+    expire_in: 1 day
