@@ -73,3 +73,25 @@ ts:build:
     paths:
       - dist/                      # compiled JS ကို next stage (docker) ကို pass လုပ်တယ်
     expire_in: 1 day
+
+# ─────────────────────────────────────────────
+# STEP 4: Docker Image Build & Push (dockerize stage)
+# ─────────────────────────────────────────────
+docker:build:
+  stage: dockerize
+  image: docker:24                 # Docker CLI ပါတဲ့ image သုံးတယ်
+  services:
+    - docker:24-dind               # Docker-in-Docker service (CI ထဲမှာ docker run လို့ ရဖို့)
+  variables:
+    IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA   # e.g. registry.gitlab.com/user/cms:abc1234
+    LATEST_TAG: $CI_REGISTRY_IMAGE:latest
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - echo "🐳 Building Docker image..."
+    - docker build -t $IMAGE_TAG -t $LATEST_TAG .
+    - echo "📤 Pushing to GitLab Container Registry..."
+    - docker push $IMAGE_TAG
+    - docker push $LATEST_TAG
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"   # main branch push တိုင်းသာ build လုပ်မယ်
