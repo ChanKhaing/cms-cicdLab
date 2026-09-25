@@ -1,4 +1,4 @@
-# image: alpine #this is gloabl variable 
+image: node:18-alpine   # npm ပါနေပြီးသား — apk add မလုပ်ရတော့
 
 stages:
   - cache
@@ -10,11 +10,9 @@ npm install:
   cache:
     paths:
       - node_modules/
-  before_script:
-    - apk add --update npm 
   script:
     - echo "Installing npm dependencies..."
-    - npm install 
+    - npm install
 
 
 eslint:
@@ -22,8 +20,6 @@ eslint:
   cache:
     paths:
       - node_modules/
-  before_script:
-    - apk add --update npm 
   when: manual
   script: 
     - echo "Running ESLint..."
@@ -32,12 +28,7 @@ eslint:
 
 # unit-tests:
 #   stage: test
-#   # cache:
-#   #   paths:
-#   #     - node_modules/
 #   when: manual
-#   # before_script:
-#     # - apk add --update npm 
 #   script:
 #     # - npx jest --coverage  
 #       - echo "Running unit tests...
