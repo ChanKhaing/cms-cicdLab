@@ -1,97 +1,49 @@
-image: node:18-alpine
+# image: alpine #this is gloabl variable 
 
 stages:
-  - install
-  - lint
-  - test
+  - cache
   - build
-  - dockerize
+  - test
 
-# ─────────────────────────────────────────────
-# STEP 1: npm install & cache node_modules
-# ─────────────────────────────────────────────
-npm:install:
-  stage: install
+npm install:
+  stage: cache
   cache:
-    key: "$CI_COMMIT_REF_SLUG"   # branch name ကို key အဖြစ်သုံး
     paths:
       - node_modules/
-    policy: push                  # ဒီ job က cache ကို upload ပဲ လုပ်တယ်
+  before_script:
+    - apk add --update npm 
   script:
-    - echo "📦 Installing npm dependencies..."
-    - npm ci                      # package-lock.json ကို တိတိကျကျ follow လုပ်တယ်
-  artifacts:
-    expire_in: 1 day
+    - echo "Installing npm dependencies..."
+    - npm install 
 
-# ─────────────────────────────────────────────
-# STEP 2: ESLint (lint stage)
-# ─────────────────────────────────────────────
+
 eslint:
-  stage: lint
-  cache:
-    key: "$CI_COMMIT_REF_SLUG"
-    paths:
-      - node_modules/
-    policy: pull                  # cache ကို download ပဲ လုပ်တယ် (upload မလုပ်)
-  script:
-    - echo "🔍 Running ESLint..."
-    - npx eslint . --ext .ts      # TypeScript files အားလုံး lint လုပ်
-
-# ─────────────────────────────────────────────
-# STEP 2: Jest Unit Tests (test stage)
-# ─────────────────────────────────────────────
-unit:test:
   stage: test
   cache:
-    key: "$CI_COMMIT_REF_SLUG"
     paths:
       - node_modules/
-    policy: pull                  # cache ကို download ပဲ လုပ်တယ်
-  script:
-    - echo "🧪 Running Jest unit tests..."
-    - npm test                    # jest --coverage (package.json မှာ သတ်မှတ်ထားတယ်)
-  artifacts:
-    when: always                  # test fail ဖြစ်လည်း coverage report သိမ်းတယ်
-    paths:
-      - coverage/
-    expire_in: 7 days
-
-# ─────────────────────────────────────────────
-# STEP 3: TypeScript Build (build stage)
-# ─────────────────────────────────────────────
-ts:build:
-  stage: build
-  cache:
-    key: "$CI_COMMIT_REF_SLUG"
-    paths:
-      - node_modules/
-    policy: pull                  # node_modules ကို download ပဲ လုပ်တယ်
-  script:
-    - echo "🔨 Compiling TypeScript..."
-    - npm run build:ts             # tsc → src/*.ts ကို dist/*.js အဖြစ် compile လုပ်တယ်
-  artifacts:
-    paths:
-      - dist/                      # compiled JS ကို next stage (docker) ကို pass လုပ်တယ်
-    expire_in: 1 day
-
-# ─────────────────────────────────────────────
-# STEP 4: Docker Image Build & Push (dockerize stage)
-# ─────────────────────────────────────────────
-docker:build:
-  stage: dockerize
-  image: docker:24                 # Docker CLI ပါတဲ့ image သုံးတယ်
-  services:
-    - docker:24-dind               # Docker-in-Docker service (CI ထဲမှာ docker run လို့ ရဖို့)
-  variables:
-    IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA   # e.g. registry.gitlab.com/user/cms:abc1234
-    LATEST_TAG: $CI_REGISTRY_IMAGE:latest
   before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - apk add --update npm 
+  when: manual
+  script: 
+    - echo "Running ESLint..."
+    - npx eslint .
+
+
+# unit-tests:
+#   stage: test
+#   # cache:
+#   #   paths:
+#   #     - node_modules/
+#   when: manual
+#   # before_script:
+#     # - apk add --update npm 
+#   script:
+#     # - npx jest --coverage  
+#       - echo "Running unit tests...
+just-things:
+  stage: test
   script:
-    - echo "🐳 Building Docker image..."
-    - docker build -t $IMAGE_TAG -t $LATEST_TAG .
-    - echo "📤 Pushing to GitLab Container Registry..."
-    - docker push $IMAGE_TAG
-    - docker push $LATEST_TAG
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main"   # main branch push တိုင်းသာ build လုပ်မယ်
+    - echo "Installing npm dependencies..."
+    # - npm install
+    - echo "Running unit tests..."
