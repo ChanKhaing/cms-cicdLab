@@ -24,10 +24,25 @@ eslint:
     policy: pull
     paths:
       - node_modules/
-  when: manual
   script: 
     - echo "Running ESLint..."
     - npx eslint .
+
+
+
+unit-tests:
+  stage: test
+  cache:
+    key: $CI_COMMIT_REF_SLUG
+    policy: pull
+    paths:
+      - node_modules/
+  script:
+    - echo "Running unit tests..."
+    - npm test
+
+
+
 
 
 # unit-tests:
@@ -36,9 +51,3 @@ eslint:
 #   script:
 #     # - npx jest --coverage  
 #       - echo "Running unit tests...
-just-things:
-  stage: test
-  script:
-    - echo "Installing npm dependencies..."
-    # - npm install
-    - echo "Running unit tests..."
