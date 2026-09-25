@@ -12,7 +12,7 @@ npm install:
       - node_modules/
   script:
     - echo "Installing npm dependencies..."
-    - npm install
+    - npm ci
 
 
 eslint:
