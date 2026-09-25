@@ -8,6 +8,8 @@ stages:
 npm install:
   stage: cache
   cache:
+    key: $CI_COMMIT_REF_SLUG
+    policy: push 
     paths:
       - node_modules/
   script:
@@ -18,6 +20,8 @@ npm install:
 eslint:
   stage: test
   cache:
+    key: $CI_COMMIT_REF_SLUG
+    policy: pull
     paths:
       - node_modules/
   when: manual
