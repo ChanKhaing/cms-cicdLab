@@ -39,7 +39,12 @@ unit-tests:
       - node_modules/
   script:
     - echo "Running unit tests..."
-    - npm test
+    - npx test
+  artifacts:
+    when: always
+    paths:
+      - coverage/
+    expire_in: 10 mins
 
 
 
