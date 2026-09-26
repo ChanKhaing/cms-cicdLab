@@ -50,9 +50,17 @@ unit-tests:
 
 
 
-# unit-tests:
-#   stage: test
-#   when: manual
-#   script:
-#     # - npx jest --coverage  
-#       - echo "Running unit tests...
+ts-build:
+  stage: build
+  cache:
+    key: $CI_COMMIT_REF_SLUG
+    policy: pull
+    paths: 
+      - node_modules/
+  script:
+  - echo "building ts to js"
+  - npm run build:ts
+  artifacts:
+    paths: 
+      - dist/
+    expire_in: 10 days
