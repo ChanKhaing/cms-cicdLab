@@ -2,8 +2,9 @@ image: node:18-alpine   # npm ပါနေပြီးသား — apk add မ�
 
 stages:
   - cache
-  - build
   - test
+  - build 
+  - dockerize
 
 npm install:
   stage: cache
@@ -50,8 +51,6 @@ unit-tests:
 
 
 
-
-
 ts-build:
   stage: build
   cache:
@@ -66,3 +65,12 @@ ts-build:
     paths: 
       - dist/
     expire_in: 10 days
+
+
+docker-build:
+  stage: dockerize
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  script:
+    - docker build -t node-cms .
