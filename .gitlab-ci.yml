@@ -39,7 +39,7 @@ unit-tests:
       - node_modules/
   script:
     - echo "Running unit tests..."
-    - npx test
+    - npx jest --coverage
   artifacts:
     when: always
     paths:
