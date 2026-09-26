@@ -73,4 +73,11 @@ docker-build:
   services:
     - docker:24.0.5-dind
   script:
-    - docker build -t node-cms .
+    # ၁။ GitLab Registry သို့ Login ဝင်ခြင်း
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    
+    # ၂။ Image ကို တည်ဆောက်ခြင်း (အမည်ကို $CI_REGISTRY_IMAGE သုံးပြီး ပေးပါမယ်)
+    - docker build -t $CI_REGISTRY_IMAGE:latest .
+    
+    # ၃။ တည်ဆောက်ပြီးသား Image ကို Registry သို့ Upload တင်ခြင်း
+    - docker push $CI_REGISTRY_IMAGE:latest
