@@ -26,7 +26,7 @@ eslint:
       - node_modules/
   script: 
     - echo "Running ESLint..."
-    - npx eslint .
+    - npx eslint . --max-warnings 100
 
 
 
